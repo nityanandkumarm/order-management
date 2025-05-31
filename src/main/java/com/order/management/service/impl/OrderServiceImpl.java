@@ -9,6 +9,8 @@ import com.order.management.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -107,5 +109,30 @@ public class OrderServiceImpl implements OrderService {
                 .items(itemDTOs)
                 .totalAmount(totalAmount)
                 .build();
+    }
+
+    @Override
+    public List<CustomerOrderCountDTO> getOrderCountPerCustomer() {
+        log.debug("Fetching total order count per customer");
+        List<Object[]> rows = orderRepository.findOrderCountPerCustomer();
+        return rows.stream()
+                .map(row -> new CustomerOrderCountDTO(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        ((Number) row[2]).longValue()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CustomerOrderCountDTO> getTopCustomers(int topN) {
+        log.debug("Fetching top {} customers by order count", topN);
+        PageRequest pageReq = PageRequest.of(0, topN);
+        List<Object[]> rows = orderRepository.findTopCustomers(pageReq);
+        return rows.stream()
+                .map(row -> new CustomerOrderCountDTO(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        ((Number) row[2]).longValue()))
+                .collect(Collectors.toList());
     }
 }
