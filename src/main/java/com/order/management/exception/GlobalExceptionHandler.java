@@ -31,22 +31,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        
-        log.error("DataIntegrityViolationException: {}", ex.getRootCause() != null 
-            ? ex.getRootCause().getMessage() 
-            : ex.getMessage());
-
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex) {
+        log.warn("InsufficientStockException: {}", ex.getMessage());
         ErrorResponse body = ErrorResponse.builder()
-            .errorCode("DUPLICATE_RESOURCE")
-            .message("A database constraint was violated. Please ensure unique values or valid references.")
+            .errorCode("INSUFFICIENT_STOCK")
+            .message(ex.getMessage())
             .timestamp(Instant.now())
             .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-   
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("DataIntegrityViolationException: {}", 
+                  ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage());
+        ErrorResponse body = ErrorResponse.builder()
+            .errorCode("DUPLICATE_RESOURCE")
+            .message("A database constraint was violated. Please ensure unique or valid values.")
+            .timestamp(Instant.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         String combinedErrors = ex.getBindingResult().getFieldErrors().stream()
